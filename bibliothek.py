@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import pandas as pd
 from internetarchive import get_item, download
@@ -27,15 +28,27 @@ class Library:
     'Stores books and books catalog'
     # db location
     # methods 
-    def __init__(self, name, library_location, books_location):
-        self.name = name
-        self.library_location = library_location
+    def __init__(self, name):
+        self.library_location = name
     
     def open_library(self):
         'Creates a database and directory to store books'
-        conn = sqlite3.connect(self.library_location)
-        pass
-        
+        # Create directory structure
+        if not os.path.exists(self.library_location):
+            os.makedirs(self.library_location + '/books')
+        self.db = sqlite3.connect(self.library_location + '/catalog.db')
+        # self.db.execute('''CREATE TABLE catalog
+        #                     (id text, title text, author text,
+        #                     publisher text, year text,
+        #                     isbn text, image_url text,
+        #                     image_path text,
+        #                     classification text,
+        #                     classification_path text,
+        #                     classification_url text)''')
+        # self.db.commit()
+        self.db.close()
+
+
     def add_book():
         pass
 
