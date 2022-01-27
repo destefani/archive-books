@@ -36,3 +36,16 @@ All the files are stored with this structure:
             └── page_2.png
             └── page_n.png
 ```
+
+### The library catalog
+
+The library records the next fields about each book:
+
+- `identifier`: Is a unique identifier assigned by archive.org
+- `date`: Publication date
+- `subject`: Labels regarding the books content
+- `title`
+- `year`
+- `language`
+
+In addition to the pages image files.
