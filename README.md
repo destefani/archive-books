@@ -23,6 +23,7 @@ A library is composed by a `catalog` and the image files from the corresponding 
 
 All the files are stored with this structure:
 
+```
 ├── library_name    
     └── catalog.db  
     └── books 
@@ -34,3 +35,4 @@ All the files are stored with this structure:
             └── page_1.png
             └── page_2.png
             └── page_n.png
+```
