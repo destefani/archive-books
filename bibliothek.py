@@ -1,3 +1,4 @@
+import json
 import os
 import sqlite3
 import pandas as pd
@@ -36,20 +37,36 @@ class Library:
         # Create directory structure
         if not os.path.exists(self.library_location):
             os.makedirs(self.library_location + '/books')
-        self.db = sqlite3.connect(self.library_location + '/catalog.db')
-        # self.db.execute('''CREATE TABLE catalog
-        #                     (id text, title text, author text,
-        #                     publisher text, year text,
-        #                     isbn text, image_url text,
-        #                     image_path text,
-        #                     classification text,
-        #                     classification_path text,
-        #                     classification_url text)''')
-        # self.db.commit()
-        self.db.close()
+        # Create database and catalog table
+        conn = sqlite3.connect(self.library_location + '/catalog.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE catalog (
+            identifier text,
+            date integer,
+            subject text,
+            title text,
+            year integer,
+            language text
+            )
+                        ''')
+        conn.commit()
+        conn.close()
+        print(f'The library {self.library_location} has been opened')
 
 
-    def add_book():
+    def add_book(book):
+        'Adds a book to the library'
+        # Check if the book is already in the library
+
+
+        # Download the book
+        # Add the book to the catalog
+        conn = sqlite3.connect(self.library_location + '/catalog.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO catalog (identifier, date, subject, title, year, language)
+        # Add the book to the library''')
         pass
 
     def remove_book():
@@ -61,8 +78,16 @@ class Library:
     def check_id():
         pass
     
-    def request_catalog():
-        pass
+    def request_catalog(self):
+        conn = sqlite3.connect(self.library_location + '/catalog.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM catalog
+            ''')
+        catalog = cursor.fetchall()
+        conn.close()
+        return catalog
+        
 
 
 #----------------------------------------------------------------------------
@@ -92,6 +117,7 @@ class Historian():
 
 class Book():
     'Pure magic in paper'
+    
     pass
 
 #----------------------------------------------------------------------------
