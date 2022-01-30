@@ -1,7 +1,6 @@
 from bibliothek import Library, Librarian
 
 
-
 # Instantiate a librarian
 librarian = Librarian('the_library')
 
