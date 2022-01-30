@@ -8,6 +8,7 @@ import tempfile
 import zipfile
 import cv2
 import pandas as pd
+from tqdm import tqdm
 from internetarchive import get_item, download
 
 
@@ -161,11 +162,12 @@ def extract(file, dest):
 
 def convert_jp2_to_png(jp2_directory, png_directory):
     print('Converting images to png')
-    for file in jp2_directory.rglob('*'):
-        if file.suffix == ".jp2":
-            image = cv2.imread(str(file))
-            filename = str((png_directory / file.stem).with_suffix('.png'))
-            cv2.imwrite(filename, image)
+    for file in jp2_directory.rglob('*.jp2'):
+        # if file.suffix == ".jp2":
+        print(file)
+        image = cv2.imread(str(file))
+        filename = str((png_directory / file.stem).with_suffix('.png'))
+        cv2.imwrite(filename, image)
     print('Done')
 
 
