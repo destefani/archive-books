@@ -1,4 +1,4 @@
-import glob
+from genericpath import exists
 import json
 import os
 from pathlib import Path # implement paths!
@@ -13,17 +13,15 @@ from internetarchive import get_item, download
 
 ## Plan
 # - input: id and list of ids of the books
-# - Download images of the books
+# - Download images of the books ✅
 # - Classify each page (image) of the books
-# - Save the results (mongodb?)
+# - Save the results sqlite3
 
 # Goal: RPG like library for managing collections of books images
 
 ## 1. Download images of the books
 
-identifier_list = []
-
-# The librarian is in charge of the processing of the books
+# The librarian is in charge of processing the books
 # For a book to be added to the library:
 # - Make a request to add the book to the library
 
@@ -37,15 +35,15 @@ class Library:
     # db location
     # methods
     def __init__(self, name):
-        self.library_location = name
+        self.library_location = Path(name)
 
     def open_library(self):
         "Creates a database and directory to store books"
         # Create directory structure
         if not os.path.exists(self.library_location):
-            os.makedirs(self.library_location + "/books")
+            os.makedirs(self.library_location / "books")
         # Create database and catalog table
-        conn = sqlite3.connect(self.library_location + "/catalog.db")
+        conn = sqlite3.connect(self.library_location / "catalog.db")  # move to __init__
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -69,7 +67,7 @@ class Library:
 
         # Download the book
         # Add the book to the catalog
-        conn = sqlite3.connect(self.library_location + "/catalog.db")
+        conn = sqlite3.connect(self.library_location / "catalog.db")
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -88,7 +86,7 @@ class Library:
         pass
 
     def request_catalog(self):
-        conn = sqlite3.connect(self.library_location + "/catalog.db")
+        conn = sqlite3.connect(self.library_location / "catalog.db")
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -121,18 +119,21 @@ class Librarian:
 
     def get_book(self, book_identifier):
         book = get_item(book_identifier)
-        book_directory = os.path.join(self.library_name, "books", book_identifier)
+        book_directory = Path(self.library_name) / "books" / book_identifier
+        book_directory.mkdir(parents=True, exist_ok=True)
         # Download the book
         with tempfile.TemporaryDirectory() as temp_dir:
             # Download the book
+            temp_dir = Path(temp_dir)
             download_book(book_identifier, temp_dir)          
             # Extract the book
-            downloaded_file = os.listdir(os.path.join(temp_dir, book_identifier))[0]
-            downloaded_file_path = os.path.join(temp_dir, book_identifier, downloaded_file)
+            downloaded_file = os.listdir(temp_dir / book_identifier)[0]
+            downloaded_file_path = temp_dir / book_identifier / downloaded_file
             # check how to get downloaded file from
             extract(downloaded_file_path, temp_dir)
             # Convert jp2 to png
             convert_jp2_to_png(temp_dir, book_directory)
+        return book
             
 
 
@@ -148,10 +149,10 @@ def download_book(book_identifier, dest_directory, verbose=True):
 
 def extract(file, dest):
     print(f'Extracting {file} to {dest}')
-    if file.endswith(".zip"):
+    if file.suffix == ".zip":
         with zipfile.ZipFile(file, "r") as zip_ref:
             zip_ref.extractall(dest)
-    if file.endswith(".tar"):
+    if file.suffix == ".tar":
         tar = tarfile.open(file)
         tar.extractall(dest)
         tar.close()
@@ -160,11 +161,10 @@ def extract(file, dest):
 
 def convert_jp2_to_png(jp2_directory, png_directory):
     print('Converting images to png')
-    for file in glob.iglob(jp2_directory + '/**', recursive=True):
-        if file.endswith(".jp2"):
-            image = cv2.imread(os.path.join(jp2_directory, file))
-            filename = str(Path(os.path.join(png_directory, os.path.basename(file))).with_suffix('.png'))
-            
+    for file in jp2_directory.rglob('*'):
+        if file.suffix == ".jp2":
+            image = cv2.imread(str(file))
+            filename = str((png_directory / file.stem).with_suffix('.png'))
             cv2.imwrite(filename, image)
     print('Done')
 
