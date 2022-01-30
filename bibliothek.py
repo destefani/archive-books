@@ -108,7 +108,7 @@ class Librarian:
     def __init__(self, library_name):
         self.library_name = library_name
 
-    def get_book_data(book_identifier):
+    def book_data(self, book_identifier):
         item = get_item(book_identifier)
         return item.item_metadata["metadata"]
 
@@ -118,8 +118,8 @@ class Librarian:
     def remove_book():
         pass
 
-    def get_book(self, book_identifier):
-        book = get_item(book_identifier)
+    def get_book(self, book):
+        book_identifier = book['identifier']
         book_directory = Path(self.library_name) / "books" / book_identifier
         book_directory.mkdir(parents=True, exist_ok=True)
         # Download the book
