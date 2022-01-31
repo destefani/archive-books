@@ -1,4 +1,4 @@
-# Die Bibliothek
+# Bibliothek
 
 A Python library (and CLI) to download, store, manage and process books collections from [archive.org]('archive.org') easily.
 
