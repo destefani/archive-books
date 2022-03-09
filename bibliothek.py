@@ -1,4 +1,3 @@
-from genericpath import exists
 import json
 import os
 from pathlib import Path # implement paths!
@@ -35,34 +34,45 @@ class Library:
     "Stores books and books catalog"
     # db location
     # methods
-    def __init__(self, name):
+    def __init__(self, name: str, library_location=None):
         self.name = name
-        self.library_location = Path(name)
+        if library_location is None:
+            self.library_location = Path.resolve(self) / name 
+        self.library_location = library_location
 
     def open_library(self):
-        "Creates a database and directory to store books"
+        "Creates a database and directory to store books" 
         # Create directory structure
         if not os.path.exists(self.library_location):
             os.makedirs(self.library_location / "books")
         # Create database and catalog table
-        conn = sqlite3.connect(self.library_location / "catalog.db")  # move to __init__
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE catalog (
-            identifier text,
-            date integer,
-            subject text,
-            title text,
-            year integer,
-            language text
-            )
-                        """
-        )
-        conn.commit()
-        conn.close()
-        print(f"The library {self.library_location} has been opened")
+        create_library(self.name, self.library_location)
 
+
+
+def check_if_library_exists(library_name: str) -> bool:
+    "Checks if the library exists"
+    return os.path.exists(library_name)
+
+def create_library(name: str, directory='.'):
+    "Creates a .csv file with the books catalog"
+    # Check if the library exists
+    print(f'- - - Creating library - - -')
+    print('Name:', name)
+    library_path = Path(directory) / name
+    print('Location:', library_path)
+    if check_if_library_exists(library_path):
+        raise Exception(f"The library {name} already exists")
+
+    # Create directories
+    os.makedirs(library_path / "books")
+    
+    # Create the library catalog
+    library_df =  pd.DataFrame(columns=['identifier', 'date', 'subject', 'title', 'year', 'language'])
+    library_df.to_csv(library_path / 'catalog.csv', index=False)
+    print('Done')
+
+    
     def add_book(self, book):
         "Adds a book to the library"
         # Check if the book is already in the library
@@ -127,12 +137,11 @@ class Librarian:
         book_identifier = book['identifier']
         book_directory = Path(self.library_name) / "books" / book_identifier
         book_directory.mkdir(parents=True, exist_ok=True)
-        # Download the book
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Download the book
-            temp_dir = Path(temp_dir)
-            download_book(book_identifier, temp_dir)          
-            # Extract the book
+        # Download the bookdef create_library(name, directory):
+    "Creates a .csv file with the books catalog"
+    # Check if the library exists
+    if check_if_library_exists(name):
+        raise Exception(f"The library {name} already exists")
             downloaded_file = os.listdir(temp_dir / book_identifier)[0]
             downloaded_file_path = temp_dir / book_identifier / downloaded_file
             # check how to get downloaded file from
