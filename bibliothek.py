@@ -28,28 +28,56 @@ from internetarchive import get_item, download
 # The books are in the library
 
 # ----------------------------------------------------------------------------
-
-
 class Library:
     "Stores books and books catalog"
-    # db location
-    # methods
-    def __init__(self, name: str, library_location=None):
-        self.name = name
-        if library_location is None:
-            self.library_location = Path.resolve(self) / name 
-        self.library_location = library_location
+
+    def load_library(self, library_location):
+        "Loads the library"
+        self.library_location = Path(library_location)
+        self.name = self.library_location.stem
+
+        self.catalog_df = pd.read_csv(self.library_location / "catalog.csv")
+        print(f'Library {self.name} loaded')
+        print(f'Books: {len(self.catalog_df)}')
 
     def open_library(self):
         "Creates a database and directory to store books" 
-        # Create directory structure
-        if not os.path.exists(self.library_location):
-            os.makedirs(self.library_location / "books")
         # Create database and catalog table
         create_library(self.name, self.library_location)
 
+    def add_book(self, book_id):
+        "Adds a book to the library"
+        book_directory = self.library_location / book_id
+       
+        # Check if book is already in the catalog
+        if os.path.exists(book_directory):
+            raise Exception("Book already in the library")
+        if book_id in self.catalog_df.identifier:
+            raise Exception("Book already in the catalog") 
+        
+        # Get book metadata
+        book_metadata = get_item(book_id).item_metadata
+        book_date = book_metadata['metadata']['date']
+        book_subject = book_metadata['metadata']['subject']
+        book_title = book_metadata['metadata']['title']
+        book_year = book_metadata['metadata']['year']
+        book_language = book_metadata['metadata']['language']
 
+        # Add book to the catalog
+        self.catalog_df = self.catalog_df.append(
+            {'identifier': book_id,
+             'title': book_title,
+             'subject': book_subject,
+             'date': book_date,
+             'year': book_year,
+             'language': book_language,},
+             ignore_index=True
+        )
+        self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
+        print('Book added to the catalog')
+        
 
+# Library utility functions
 def check_if_library_exists(library_name: str) -> bool:
     "Checks if the library exists"
     return os.path.exists(library_name)
@@ -73,19 +101,7 @@ def create_library(name: str, directory='.'):
     print('Done')
 
     
-    def add_book(self, book):
-        "Adds a book to the library"
-        # Check if the book is already in the library
 
-        # Download the book
-        # Add the book to the catalog
-        conn = sqlite3.connect(self.library_location / "catalog.db")
-        cursor = conn.cursor()
-        sql = ''' INSERT INTO catalog (identifier, date, subject, title, year, language)
-                  VALUES (?, ?, ?, ?, ?, ?)'''
-        cursor.execute(sql, (book.identifier, book.date, book.subject, book.title, book.year, book.language))
-        conn.commit()
-        cursor.lastrowid
 
     def remove_book():
         pass
@@ -140,15 +156,15 @@ class Librarian:
         # Download the bookdef create_library(name, directory):
     "Creates a .csv file with the books catalog"
     # Check if the library exists
-    if check_if_library_exists(name):
-        raise Exception(f"The library {name} already exists")
-            downloaded_file = os.listdir(temp_dir / book_identifier)[0]
-            downloaded_file_path = temp_dir / book_identifier / downloaded_file
-            # check how to get downloaded file from
-            extract(downloaded_file_path, temp_dir)
-            # Convert jp2 to png
-            convert_jp2_to_png(temp_dir, book_directory)
-        return book
+    # if check_if_library_exists(name):
+    #     raise Exception(f"The library {name} already exists")
+    #         downloaded_file = os.listdir(temp_dir / book_identifier)[0]
+    #         downloaded_file_path = temp_dir / book_identifier / downloaded_file
+    #         # check how to get downloaded file from
+    #         extract(downloaded_file_path, temp_dir)
+    #         # Convert jp2 to png
+    #         convert_jp2_to_png(temp_dir, book_directory)
+    #     return book
             
 
 
