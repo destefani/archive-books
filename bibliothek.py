@@ -45,7 +45,7 @@ class Library:
         # Create database and catalog table
         create_library(self.name, self.library_location)
 
-    def add_book(self, book_id):
+    def add_book(self, book_id: str):
         "Adds a book to the library"
         book_directory = self.library_location / book_id
        
@@ -70,12 +70,11 @@ class Library:
              'subject': book_subject,
              'date': book_date,
              'year': book_year,
-             'language': book_language,},
+             'language': book_language},
              ignore_index=True
         )
         self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
         print('Book added to the catalog')
-        
 
 # Library utility functions
 def check_if_library_exists(library_name: str) -> bool:
@@ -85,7 +84,7 @@ def check_if_library_exists(library_name: str) -> bool:
 def create_library(name: str, directory='.'):
     "Creates a .csv file with the books catalog"
     # Check if the library exists
-    print(f'- - - Creating library - - -')
+    print('- - - Creating library - - -')
     print('Name:', name)
     library_path = Path(directory) / name
     print('Location:', library_path)
@@ -98,6 +97,7 @@ def create_library(name: str, directory='.'):
     # Create the library catalog
     library_df =  pd.DataFrame(columns=['identifier', 'date', 'subject', 'title', 'year', 'language'])
     library_df.to_csv(library_path / 'catalog.csv', index=False)
+    
     print('Done')
 
     
