@@ -36,6 +36,7 @@ class Library:
     # db location
     # methods
     def __init__(self, name):
+        self.name = name
         self.library_location = Path(name)
 
     def open_library(self):
@@ -70,12 +71,11 @@ class Library:
         # Add the book to the catalog
         conn = sqlite3.connect(self.library_location / "catalog.db")
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO catalog (identifier, date, subject, title, year, language)
-        # Add the book to the library"""
-        )
-        pass
+        sql = ''' INSERT INTO catalog (identifier, date, subject, title, year, language)
+                  VALUES (?, ?, ?, ?, ?, ?)'''
+        cursor.execute(sql, (book.identifier, book.date, book.subject, book.title, book.year, book.language))
+        conn.commit()
+        cursor.lastrowid
 
     def remove_book():
         pass
@@ -112,8 +112,13 @@ class Librarian:
         item = get_item(book_identifier)
         return item.item_metadata["metadata"]
 
-    def add_book():
+    def add_book(self, book, library, download=True):
+        library.add_book(book)
+        # Check if the book is already in the library
+        # Download the book
+        # Add the book to the catalog
         pass
+        
 
     def remove_book():
         pass
