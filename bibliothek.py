@@ -186,11 +186,16 @@ class Historian:
 class Book:
     "Pure magic in paper"
 
-    def __init__(self, book_directory):
+    def __init__(self, book_data, library):
         # Books metadata
-
+        self.library = library
+        self.book_data = book_data
+        self.book_id = book_data['identifier']
+        self.book_directory = Path(self.library) / "books" / self.book_id
+        
         # Book images directory
-        pass
+    # def images(self):
+    #     book_directory / 
 
     # def __len__(self):
     # return len()
