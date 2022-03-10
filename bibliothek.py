@@ -5,6 +5,7 @@ import sqlite3
 import tarfile
 import tempfile
 import zipfile
+os.environ['OPENCV_IO_ENABLE_JASPER']='TRUE' # enable jasper
 import cv2
 import pandas as pd
 from tqdm import tqdm
@@ -40,10 +41,11 @@ class Library:
         print(f'Library {self.name} loaded')
         print(f'Books: {len(self.catalog_df)}')
 
-    def open_library(self):
+    def open_library(self, name):
+        self.name = name
         "Creates a database and directory to store books" 
         # Create database and catalog table
-        create_library(self.name, self.library_location)
+        create_library(self.name)
 
     def add_book(self, book_id: str):
         "Adds a book to the library"
@@ -63,16 +65,26 @@ class Library:
         book_year = book_metadata['metadata']['year']
         book_language = book_metadata['metadata']['language']
 
+        # Download book
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir = Path(temp_dir)
+            download_book(book_id, temp_dir)
+            for file in os.listdir(temp_dir / book_id):
+                print(temp_dir / book_id / file)
+                extract(temp_dir / book_id / file, temp_dir / 'extracted')
+                for file in os.listdir(temp_dir / 'extracted'):
+                    convert_jp2_to_png(temp_dir / 'extracted', book_directory)
+        
         # Add book to the catalog
-        self.catalog_df = self.catalog_df.append(
+        book_df = pd.DataFrame(
             {'identifier': book_id,
              'title': book_title,
              'subject': book_subject,
              'date': book_date,
              'year': book_year,
-             'language': book_language},
-             ignore_index=True
+             'language': book_language}
         )
+        self.catalog_df = pd.concat([self.catalog_df, book_df])
         self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
         print('Book added to the catalog')
 
@@ -98,6 +110,38 @@ def create_library(name: str, directory='.'):
     library_df =  pd.DataFrame(columns=['identifier', 'date', 'subject', 'title', 'year', 'language'])
     library_df.to_csv(library_path / 'catalog.csv', index=False)
     
+    print('Done')
+
+# Download and process book
+def download_book(book_id, dest_path, verbose=True):
+    print(f'Downloading {book_id}')
+    download(
+        book_id,
+        destdir=dest_path,
+        formats="Single Page Processed JP2 ZIP",
+        verbose=verbose,
+    )
+
+def extract(file, dest_path):
+    print(f'Extracting {file} to {dest_path}')
+    if file.suffix == ".zip":
+        with zipfile.ZipFile(file, "r") as zip_ref:
+            zip_ref.extractall(dest_path)
+    if file.suffix == ".tar":
+        tar = tarfile.open(file)
+        tar.extractall(dest_path)
+        tar.close()
+    print('Done')
+
+
+def convert_jp2_to_png(jp2_directory, png_directory):
+    print('Converting images to png')
+    image_files_list = list(jp2_directory.rglob('*.jp2'))
+    for file in tqdm(image_files_list):
+        print(file)
+        image = cv2.imread(str(file))
+        filename = str((Path(png_directory) / file.stem).with_suffix('.png'))
+        cv2.imwrite(filename, image)
     print('Done')
 
     
@@ -156,23 +200,23 @@ class Librarian:
         # Download the bookdef create_library(name, directory):
     "Creates a .csv file with the books catalog"
     # Check if the library exists
-    # if check_if_library_exists(name):
-    #     raise Exception(f"The library {name} already exists")
-    #         downloaded_file = os.listdir(temp_dir / book_identifier)[0]
-    #         downloaded_file_path = temp_dir / book_identifier / downloaded_file
-    #         # check how to get downloaded file from
-    #         extract(downloaded_file_path, temp_dir)
-    #         # Convert jp2 to png
-    #         convert_jp2_to_png(temp_dir, book_directory)
-    #     return book
+    if check_if_library_exists(name):
+        raise Exception(f"The library {name} already exists")
+            downloaded_file = os.listdir(temp_dir / book_identifier)[0]
+            downloaded_file_path = temp_dir / book_identifier / downloaded_file
+            # check how to get downloaded file from
+            extract(downloaded_file_path, temp_dir)
+            # Convert jp2 to png
+            convert_jp2_to_png(temp_dir, book_directory)
+        return book
             
 
 
-def download_book(book_identifier, dest_directory, verbose=True):
-    print(f'Downloading {book_identifier}')
+def download_book(book_id, dest_path, verbose=True):
+    print(f'Downloading {book_id}')
     download(
-        book_identifier,
-        destdir=dest_directory,
+        book_id,
+        destdir=dest_path,
         formats="Single Page Processed JP2 ZIP",
         verbose=verbose,
     )
