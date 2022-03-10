@@ -1,4 +1,3 @@
-from genericpath import exists
 import json
 import os
 from pathlib import Path # implement paths!
@@ -29,53 +28,80 @@ from internetarchive import get_item, download
 # The books are in the library
 
 # ----------------------------------------------------------------------------
-
-
 class Library:
     "Stores books and books catalog"
-    # db location
-    # methods
-    def __init__(self, name):
-        self.name = name
-        self.library_location = Path(name)
+
+    def load_library(self, library_location):
+        "Loads the library"
+        self.library_location = Path(library_location)
+        self.name = self.library_location.stem
+
+        self.catalog_df = pd.read_csv(self.library_location / "catalog.csv")
+        print(f'Library {self.name} loaded')
+        print(f'Books: {len(self.catalog_df)}')
 
     def open_library(self):
-        "Creates a database and directory to store books"
-        # Create directory structure
-        if not os.path.exists(self.library_location):
-            os.makedirs(self.library_location / "books")
+        "Creates a database and directory to store books" 
         # Create database and catalog table
-        conn = sqlite3.connect(self.library_location / "catalog.db")  # move to __init__
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE catalog (
-            identifier text,
-            date integer,
-            subject text,
-            title text,
-            year integer,
-            language text
-            )
-                        """
-        )
-        conn.commit()
-        conn.close()
-        print(f"The library {self.library_location} has been opened")
+        create_library(self.name, self.library_location)
 
-    def add_book(self, book):
+    def add_book(self, book_id: str):
         "Adds a book to the library"
-        # Check if the book is already in the library
+        book_directory = self.library_location / book_id
+       
+        # Check if book is already in the catalog
+        if os.path.exists(book_directory):
+            raise Exception("Book already in the library")
+        if book_id in self.catalog_df.identifier:
+            raise Exception("Book already in the catalog") 
+        
+        # Get book metadata
+        book_metadata = get_item(book_id).item_metadata
+        book_date = book_metadata['metadata']['date']
+        book_subject = book_metadata['metadata']['subject']
+        book_title = book_metadata['metadata']['title']
+        book_year = book_metadata['metadata']['year']
+        book_language = book_metadata['metadata']['language']
 
-        # Download the book
-        # Add the book to the catalog
-        conn = sqlite3.connect(self.library_location / "catalog.db")
-        cursor = conn.cursor()
-        sql = ''' INSERT INTO catalog (identifier, date, subject, title, year, language)
-                  VALUES (?, ?, ?, ?, ?, ?)'''
-        cursor.execute(sql, (book.identifier, book.date, book.subject, book.title, book.year, book.language))
-        conn.commit()
-        cursor.lastrowid
+        # Add book to the catalog
+        self.catalog_df = self.catalog_df.append(
+            {'identifier': book_id,
+             'title': book_title,
+             'subject': book_subject,
+             'date': book_date,
+             'year': book_year,
+             'language': book_language},
+             ignore_index=True
+        )
+        self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
+        print('Book added to the catalog')
+
+# Library utility functions
+def check_if_library_exists(library_name: str) -> bool:
+    "Checks if the library exists"
+    return os.path.exists(library_name)
+
+def create_library(name: str, directory='.'):
+    "Creates a .csv file with the books catalog"
+    # Check if the library exists
+    print('- - - Creating library - - -')
+    print('Name:', name)
+    library_path = Path(directory) / name
+    print('Location:', library_path)
+    if check_if_library_exists(library_path):
+        raise Exception(f"The library {name} already exists")
+
+    # Create directories
+    os.makedirs(library_path / "books")
+    
+    # Create the library catalog
+    library_df =  pd.DataFrame(columns=['identifier', 'date', 'subject', 'title', 'year', 'language'])
+    library_df.to_csv(library_path / 'catalog.csv', index=False)
+    
+    print('Done')
+
+    
+
 
     def remove_book():
         pass
@@ -127,19 +153,18 @@ class Librarian:
         book_identifier = book['identifier']
         book_directory = Path(self.library_name) / "books" / book_identifier
         book_directory.mkdir(parents=True, exist_ok=True)
-        # Download the book
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Download the book
-            temp_dir = Path(temp_dir)
-            download_book(book_identifier, temp_dir)          
-            # Extract the book
-            downloaded_file = os.listdir(temp_dir / book_identifier)[0]
-            downloaded_file_path = temp_dir / book_identifier / downloaded_file
-            # check how to get downloaded file from
-            extract(downloaded_file_path, temp_dir)
-            # Convert jp2 to png
-            convert_jp2_to_png(temp_dir, book_directory)
-        return book
+        # Download the bookdef create_library(name, directory):
+    "Creates a .csv file with the books catalog"
+    # Check if the library exists
+    # if check_if_library_exists(name):
+    #     raise Exception(f"The library {name} already exists")
+    #         downloaded_file = os.listdir(temp_dir / book_identifier)[0]
+    #         downloaded_file_path = temp_dir / book_identifier / downloaded_file
+    #         # check how to get downloaded file from
+    #         extract(downloaded_file_path, temp_dir)
+    #         # Convert jp2 to png
+    #         convert_jp2_to_png(temp_dir, book_directory)
+    #     return book
             
 
 
@@ -191,11 +216,16 @@ class Historian:
 class Book:
     "Pure magic in paper"
 
-    def __init__(self, book_directory):
+    def __init__(self, book_data, library):
         # Books metadata
-
+        self.library = library
+        self.book_data = book_data
+        self.book_id = book_data['identifier']
+        self.book_directory = Path(self.library) / "books" / self.book_id
+        
         # Book images directory
-        pass
+    # def images(self):
+    #     book_directory / 
 
     # def __len__(self):
     # return len()
