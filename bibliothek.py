@@ -5,8 +5,8 @@ import sqlite3
 import tarfile
 import tempfile
 import zipfile
-os.environ['OPENCV_IO_ENABLE_JASPER']='TRUE' # enable jasper
-import cv2
+# os.environ['OPENCV_IO_ENABLE_JASPER']='TRUE' # enable jasper
+import cv2 
 import pandas as pd
 from tqdm import tqdm
 from internetarchive import get_item, download
@@ -49,7 +49,7 @@ class Library:
 
     def add_book(self, book_id: str):
         "Adds a book to the library"
-        book_directory = self.library_location / book_id
+        book_directory = self.library_location / 'books' / book_id 
        
         # Check if book is already in the catalog
         if os.path.exists(book_directory):
@@ -69,11 +69,10 @@ class Library:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
             download_book(book_id, temp_dir)
-            for file in os.listdir(temp_dir / book_id):
-                print(temp_dir / book_id / file)
-                extract(temp_dir / book_id / file, temp_dir / 'extracted')
-                for file in os.listdir(temp_dir / 'extracted'):
-                    convert_jp2_to_png(temp_dir / 'extracted', book_directory)
+            for file in os.listdir(temp_dir/ book_id):
+                extract(temp_dir/ book_id / file, temp_dir / 'extracted')
+                for directory in os.listdir(temp_dir / 'extracted'):
+                    convert_jp2_to_png(temp_dir / 'extracted' / directory, book_directory)
         
         # Add book to the catalog
         book_df = pd.DataFrame(
@@ -136,16 +135,14 @@ def extract(file, dest_path):
 
 def convert_jp2_to_png(jp2_directory, png_directory):
     print('Converting images to png')
+    if not os.path.exists(png_directory):
+        os.mkdir(png_directory)
     image_files_list = list(jp2_directory.rglob('*.jp2'))
     for file in tqdm(image_files_list):
-        print(file)
         image = cv2.imread(str(file))
-        filename = str((Path(png_directory) / file.stem).with_suffix('.png'))
+        filename = str((png_directory / file.stem).with_suffix('.png'))
         cv2.imwrite(filename, image)
     print('Done')
-
-    
-
 
     def remove_book():
         pass
@@ -157,91 +154,81 @@ def convert_jp2_to_png(jp2_directory, png_directory):
         pass
 
     def request_catalog(self):
-        conn = sqlite3.connect(self.library_location / "catalog.db")
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM catalog
-            """
-        )
-        catalog = cursor.fetchall()
-        conn.close()
-        return catalog
-
+        pass
 
 # ----------------------------------------------------------------------------
 
 
-class Librarian:
-    "Manages the library, gets the data"
+# class Librarian:
+#     "Manages the library, gets the data"
 
-    def __init__(self, library_name):
-        self.library_name = library_name
+#     def __init__(self, library_name):
+#         self.library_name = library_name
 
-    def book_data(self, book_identifier):
-        item = get_item(book_identifier)
-        return item.item_metadata["metadata"]
+#     def book_data(self, book_identifier):
+#         item = get_item(book_identifier)
+#         return item.item_metadata["metadata"]
 
-    def add_book(self, book, library, download=True):
-        library.add_book(book)
-        # Check if the book is already in the library
-        # Download the book
-        # Add the book to the catalog
-        pass
+#     def add_book(self, book, library, download=True):
+#         library.add_book(book)
+#         # Check if the book is already in the library
+#         # Download the book
+#         # Add the book to the catalog
+#         pass
         
 
-    def remove_book():
-        pass
+#     def remove_book():
+#         pass
 
-    def get_book(self, book):
-        book_identifier = book['identifier']
-        book_directory = Path(self.library_name) / "books" / book_identifier
-        book_directory.mkdir(parents=True, exist_ok=True)
-        # Download the bookdef create_library(name, directory):
-    "Creates a .csv file with the books catalog"
-    # Check if the library exists
-    if check_if_library_exists(name):
-        raise Exception(f"The library {name} already exists")
-            downloaded_file = os.listdir(temp_dir / book_identifier)[0]
-            downloaded_file_path = temp_dir / book_identifier / downloaded_file
-            # check how to get downloaded file from
-            extract(downloaded_file_path, temp_dir)
-            # Convert jp2 to png
-            convert_jp2_to_png(temp_dir, book_directory)
-        return book
+#     def get_book(self, book):
+#         book_identifier = book['identifier']
+#         book_directory = Path(self.library_name) / "books" / book_identifier
+#         book_directory.mkdir(parents=True, exist_ok=True)
+#         # Download the bookdef create_library(name, directory):
+#     "Creates a .csv file with the books catalog"
+#     # Check if the library exists
+#     if check_if_library_exists(name):
+#         raise Exception(f"The library {name} already exists")
+#             downloaded_file = os.listdir(temp_dir / book_identifier)[0]
+#             downloaded_file_path = temp_dir / book_identifier / downloaded_file
+#             # check how to get downloaded file from
+#             extract(downloaded_file_path, temp_dir)
+#             # Convert jp2 to png
+#             convert_jp2_to_png(temp_dir, book_directory)
+#         return book
             
 
 
-def download_book(book_id, dest_path, verbose=True):
-    print(f'Downloading {book_id}')
-    download(
-        book_id,
-        destdir=dest_path,
-        formats="Single Page Processed JP2 ZIP",
-        verbose=verbose,
-    )
+# def download_book(book_id, dest_path, verbose=True):
+#     print(f'Downloading {book_id}')
+#     download(
+#         book_id,
+#         destdir=dest_path,
+#         formats="Single Page Processed JP2 ZIP",
+#         verbose=verbose,
+#     )
 
 
-def extract(file, dest):
-    print(f'Extracting {file} to {dest}')
-    if file.suffix == ".zip":
-        with zipfile.ZipFile(file, "r") as zip_ref:
-            zip_ref.extractall(dest)
-    if file.suffix == ".tar":
-        tar = tarfile.open(file)
-        tar.extractall(dest)
-        tar.close()
-    print('Done')
+# def extract(file, dest):
+#     print(f'Extracting {file} to {dest}')
+#     if file.suffix == ".zip":
+#         with zipfile.ZipFile(file, "r") as zip_ref:
+#             zip_ref.extractall(dest)
+#     if file.suffix == ".tar":
+#         tar = tarfile.open(file)
+#         tar.extractall(dest)
+#         tar.close()
+#     print('Done')
 
 
-def convert_jp2_to_png(jp2_directory, png_directory):
-    print('Converting images to png')
-    image_files_list = list(jp2_directory.rglob('*.jp2'))
-    for file in tqdm(image_files_list):
-        image = cv2.imread(str(file))
-        filename = str((png_directory / file.stem).with_suffix('.png'))
-        cv2.imwrite(filename, image)
-    print('Done')
+# def convert_jp2_to_png(jp2_directory, png_directory):
+#     print('Converting images to png')
+#     image_files_list = list(jp2_directory.rglob('*.jp2'))
+#     for file in tqdm(image_files_list):
+#         image = cv2.imread(str(file))
+#         filename = str((png_directory / file.stem).with_suffix('.png'))
+#         cv2.imwrite(filename, image)
+#     print('Done')
 
 
 # ----------------------------------------------------------------------------
@@ -257,22 +244,22 @@ class Historian:
 # ----------------------------------------------------------------------------
 
 
-class Book:
-    "Pure magic in paper"
+# class Book:
+#     "Pure magic in paper"
 
-    def __init__(self, book_data, library):
-        # Books metadata
-        self.library = library
-        self.book_data = book_data
-        self.book_id = book_data['identifier']
-        self.book_directory = Path(self.library) / "books" / self.book_id
+#     def __init__(self, book_data, library):
+#         # Books metadata
+#         self.library = library
+#         self.book_data = book_data
+#         self.book_id = book_data['identifier']
+#         self.book_directory = Path(self.library) / "books" / self.book_id
         
-        # Book images directory
-    # def images(self):
-    #     book_directory / 
+#         # Book images directory
+#     # def images(self):
+#     #     book_directory / 
 
-    # def __len__(self):
-    # return len()
+#     # def __len__(self):
+#     # return len()
 
 
 # ----------------------------------------------------------------------------
@@ -284,3 +271,10 @@ class Collection:
 
 
 # ----------------------------------------------------------------------------
+
+
+if __name__ == '__main__':
+    library = Library()
+    library.load_library('alexandria')
+    library.add_book('1200thedresdencodex1200ad')
+    
