@@ -8,13 +8,11 @@ from bibliothek import Library
 # Required
 @click.option('--library',   help='Library name',     type=str,   required=True)
 @click.option('--book-id',   help='Book identifier',  type=str,   required=True)
-
-#----------------------------------------------------------------------------
   
 def main(**kwargs):
     library = Library()
     library.load_library(kwargs['library'])
-    library.download_book(kwargs['book_id'])
+    library.add_book(kwargs['book_id'])
 
 #----------------------------------------------------------------------------
 
