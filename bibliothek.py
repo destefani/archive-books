@@ -7,6 +7,7 @@ import tempfile
 import zipfile
 # os.environ['OPENCV_IO_ENABLE_JASPER']='TRUE' # enable jasper
 import cv2 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from internetarchive import get_item, download
@@ -58,12 +59,13 @@ class Library:
             raise Exception("Book already in the catalog") 
         
         # Get book metadata
-        book_metadata = get_item(book_id).item_metadata
-        book_date = book_metadata['metadata']['date']
-        book_subject = book_metadata['metadata']['subject']
-        book_title = book_metadata['metadata']['title']
-        book_year = book_metadata['metadata']['year']
-        book_language = book_metadata['metadata']['language']
+        book_metadata = get_item(book_id).item_metadata['metadata']
+
+        book_date = check_metadata(book_metadata, 'date')
+        book_subject = check_metadata(book_metadata, 'subject')
+        book_title = check_metadata(book_metadata, 'title')
+        book_year = check_metadata(book_metadata, 'year')
+        book_language = check_metadata(book_metadata, 'language')
 
         # Download book
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -75,14 +77,15 @@ class Library:
                     convert_jp2_to_png(temp_dir / 'extracted' / directory, book_directory)
         
         # Add book to the catalog
-        book_df = pd.DataFrame(
-            {'identifier': book_id,
-             'title': book_title,
-             'subject': book_subject,
-             'date': book_date,
-             'year': book_year,
-             'language': book_language}
-        )
+        book_dict = {'identifier': book_id,
+                     'title': book_title,
+                     'subject': book_subject,
+                     'date': book_date,
+                     'year': book_year,
+                     'language': book_language}
+
+        book_df = pd.DataFrame({k: [v] for k, v in book_dict.items()})
+        
         self.catalog_df = pd.concat([self.catalog_df, book_df])
         self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
         print('Book added to the catalog')
@@ -111,8 +114,16 @@ def create_library(name: str, directory='.'):
     
     print('Done')
 
+def check_metadata(book_metadata, value):
+    "Checks if the variable is in books metadata"
+    try:
+        return book_metadata[value]
+    except:
+        return np.nan
+
 # Download and process book
 def download_book(book_id, dest_path, verbose=True):
+    "Downloads the compressed jp2 files of a book"
     print(f'Downloading {book_id}')
     download(
         book_id,
@@ -122,6 +133,7 @@ def download_book(book_id, dest_path, verbose=True):
     )
 
 def extract(file, dest_path):
+    "Extracts a compressed file"
     print(f'Extracting {file} to {dest_path}')
     if file.suffix == ".zip":
         with zipfile.ZipFile(file, "r") as zip_ref:
@@ -134,6 +146,7 @@ def extract(file, dest_path):
 
 
 def convert_jp2_to_png(jp2_directory, png_directory):
+    "Converts jp2 files to png"
     print('Converting images to png')
     if not os.path.exists(png_directory):
         os.mkdir(png_directory)
@@ -276,5 +289,5 @@ class Collection:
 if __name__ == '__main__':
     library = Library()
     library.load_library('alexandria')
-    library.add_book('1200thedresdencodex1200ad')
+    library.add_book('2317059R.nlm.nih.gov')
     
