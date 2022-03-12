@@ -129,14 +129,18 @@ dmypy.json
 .pyre/
 
 # Data
-<<<<<<< HEAD
 library/
 .vscode/
-=======
 1200thedresdencodex1200ad/
 codex/
 nasa/
 superarboribusco00giov/
 test/
 books/
->>>>>>> 8cf2abb54dfa35c00ed622a8c94793d226b1b0cb
+historian/
+
+# Testing
+test.ipynb
+codex.ipynb
+alexandria/
+
