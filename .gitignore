@@ -140,6 +140,8 @@ books/
 historian/
 
 # Testing
+library.ipynb
+tutorial.ipynb
 test.ipynb
 codex.ipynb
 alexandria/
