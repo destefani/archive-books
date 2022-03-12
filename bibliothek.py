@@ -5,31 +5,14 @@ import sqlite3
 import tarfile
 import tempfile
 import zipfile
-# os.environ['OPENCV_IO_ENABLE_JASPER']='TRUE' # enable jasper
 import cv2 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from internetarchive import get_item, download
 
-
-## Plan
-# - input: id and list of ids of the books
-# - Download images of the books ✅
-# - Classify each page (image) of the books
-# - Save the results sqlite3
-
-# Goal: RPG like library for managing collections of books images
-
-## 1. Download images of the books
-
-# The librarian is in charge of processing the books
-# For a book to be added to the library:
-# - Make a request to add the book to the library
-
-# The books are in the library
-
 # ----------------------------------------------------------------------------
+
 class Library:
     "Stores books and books catalog"
 
@@ -157,95 +140,8 @@ def convert_jp2_to_png(jp2_directory, png_directory):
         cv2.imwrite(filename, image)
     print('Done')
 
-    def remove_book():
-        pass
-
-    def get_book():
-        pass
-
-    def check_id():
-        pass
-
-    def request_catalog(self):
-        pass
 
 # ----------------------------------------------------------------------------
-
-
-# class Librarian:
-#     "Manages the library, gets the data"
-
-#     def __init__(self, library_name):
-#         self.library_name = library_name
-
-#     def book_data(self, book_identifier):
-#         item = get_item(book_identifier)
-#         return item.item_metadata["metadata"]
-
-#     def add_book(self, book, library, download=True):
-#         library.add_book(book)
-#         # Check if the book is already in the library
-#         # Download the book
-#         # Add the book to the catalog
-#         pass
-        
-
-#     def remove_book():
-#         pass
-
-#     def get_book(self, book):
-#         book_identifier = book['identifier']
-#         book_directory = Path(self.library_name) / "books" / book_identifier
-#         book_directory.mkdir(parents=True, exist_ok=True)
-#         # Download the bookdef create_library(name, directory):
-#     "Creates a .csv file with the books catalog"
-#     # Check if the library exists
-#     if check_if_library_exists(name):
-#         raise Exception(f"The library {name} already exists")
-#             downloaded_file = os.listdir(temp_dir / book_identifier)[0]
-#             downloaded_file_path = temp_dir / book_identifier / downloaded_file
-#             # check how to get downloaded file from
-#             extract(downloaded_file_path, temp_dir)
-#             # Convert jp2 to png
-#             convert_jp2_to_png(temp_dir, book_directory)
-#         return book
-            
-
-
-# def download_book(book_id, dest_path, verbose=True):
-#     print(f'Downloading {book_id}')
-#     download(
-#         book_id,
-#         destdir=dest_path,
-#         formats="Single Page Processed JP2 ZIP",
-#         verbose=verbose,
-#     )
-
-
-# def extract(file, dest):
-#     print(f'Extracting {file} to {dest}')
-#     if file.suffix == ".zip":
-#         with zipfile.ZipFile(file, "r") as zip_ref:
-#             zip_ref.extractall(dest)
-#     if file.suffix == ".tar":
-#         tar = tarfile.open(file)
-#         tar.extractall(dest)
-#         tar.close()
-#     print('Done')
-
-
-# def convert_jp2_to_png(jp2_directory, png_directory):
-#     print('Converting images to png')
-#     image_files_list = list(jp2_directory.rglob('*.jp2'))
-#     for file in tqdm(image_files_list):
-#         image = cv2.imread(str(file))
-#         filename = str((png_directory / file.stem).with_suffix('.png'))
-#         cv2.imwrite(filename, image)
-#     print('Done')
-
-
-# ----------------------------------------------------------------------------
-
 
 class Historian:
     "Classifies books"
@@ -253,41 +149,4 @@ class Historian:
     # methods
     pass
 
-
 # ----------------------------------------------------------------------------
-
-
-# class Book:
-#     "Pure magic in paper"
-
-#     def __init__(self, book_data, library):
-#         # Books metadata
-#         self.library = library
-#         self.book_data = book_data
-#         self.book_id = book_data['identifier']
-#         self.book_directory = Path(self.library) / "books" / self.book_id
-        
-#         # Book images directory
-#     # def images(self):
-#     #     book_directory / 
-
-#     # def __len__(self):
-#     # return len()
-
-
-# ----------------------------------------------------------------------------
-
-
-class Collection:
-    "Personal collection of library books"
-    pass
-
-
-# ----------------------------------------------------------------------------
-
-
-if __name__ == '__main__':
-    library = Library()
-    library.load_library('alexandria')
-    library.add_book('2317059R.nlm.nih.gov')
-    
