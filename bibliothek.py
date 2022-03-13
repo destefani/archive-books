@@ -73,6 +73,24 @@ class Library:
         self.catalog_df.to_csv(self.library_location / "catalog.csv", index=False)
         print('Book added to the catalog')
 
+    def add_books(self, books: list):
+        "Adds a list of books to the library"
+        downloaded_books = []
+        failed_books = []
+        for book_id in books:
+            try:
+                self.add_book(book_id)
+                downloaded_books.append(book_id)
+            except:
+                failed_books.append(book_id)
+                print('Failed to download book:', book_id)
+        # Log downloaded/failed books
+        log_downloads(self.name, downloaded_books, error=False)
+        log_downloads(self.name, failed_books, error=True)
+
+        print(f'Downloaded {len(downloaded_books)} books')
+        print(f'Failed to download {len(failed_books)} books')
+
 # Library utility functions
 def check_if_library_exists(library_name: str) -> bool:
     "Checks if the library exists"
@@ -103,6 +121,18 @@ def check_metadata(book_metadata, value):
         return book_metadata[value]
     except:
         return np.nan
+
+def log_downloads(library_name, downloaded_books, error=False):
+    "Logs the downloaded books"
+    logging_dir = Path(library_name) / 'logs'
+    if not os.path.exists(logging_dir):
+        os.makedirs(logging_dir)
+    if error:
+        logging_file = logging_dir / 'errors.csv'
+    else:
+        logging_file = logging_dir / 'downloaded.csv'
+    downloaded_df = pd.DataFrame(downloaded_books, index=False, header=False)
+    downloaded_df.to_csv(logging_file, index=False)
 
 # Download and process book
 def download_book(book_id, dest_path, verbose=True):
@@ -139,7 +169,6 @@ def convert_jp2_to_png(jp2_directory, png_directory):
         filename = str((png_directory / file.stem).with_suffix('.png'))
         cv2.imwrite(filename, image)
     print('Done')
-
 
 # ----------------------------------------------------------------------------
 
