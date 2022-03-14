@@ -13,10 +13,6 @@ from bibliothek import Library
 # Optional
 @click.option('--book-list', help='Book list file location',   type=str,   default=None)
 
-def read_yaml(books_list_file):
-    with open(books_list_file, 'r') as f:
-        books_list = yaml.load(f)
-    return books_list
 
 def main(**kwargs):
     print(kwargs)
@@ -31,6 +27,14 @@ def main(**kwargs):
         library.add_books(books_list)
     else:
         library.add_book(kwargs['book_id'])
+
+def read_yaml(books_list_file):
+    with open(books_list_file, 'r') as f:
+        yaml_file = yaml.load(f, Loader=yaml.FullLoader)
+        books_list = yaml_file['books_list']
+        print(books_list)
+
+    return books_list
 
 #----------------------------------------------------------------------------
 
