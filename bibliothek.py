@@ -1,7 +1,5 @@
-import json
 import os
-from pathlib import Path # implement paths!
-import sqlite3
+from pathlib import Path
 import tarfile
 import tempfile
 import zipfile
