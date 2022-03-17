@@ -1,5 +1,7 @@
 build:
 	docker build -t destefanim/archive-books .
+push:
+	docker push destefanim/archive-books
 run:
 	docker run -it -v "$(pwd)":/workspace destefanim/archive-books /bin/bash	
 test:
